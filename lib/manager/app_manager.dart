@@ -109,22 +109,6 @@ class AppEnvManager extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (kDebugMode) {
-      if (globalState.isPre) {
-        return Banner(
-          message: 'DEBUG',
-          location: BannerLocation.topEnd,
-          child: child,
-        );
-      }
-    }
-    if (globalState.isPre) {
-      return Banner(
-        message: globalState.appEnv.toUpperCase(),
-        location: BannerLocation.topEnd,
-        child: child,
-      );
-    }
     return child;
   }
 }

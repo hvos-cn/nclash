@@ -67,6 +67,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            isZipAlignEnabled = true
             configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
                 mappingFileUploadEnabled = false
             }
