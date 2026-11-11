@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:fl_clash/common/picker.dart';
 import 'package:test/test.dart';
 
-abstract base class _LocalPlatformFile extends PlatformFile {
+base class _LocalPlatformFile extends PlatformFile {
   _LocalPlatformFile(this._file);
 
   final File _file;
@@ -22,6 +22,9 @@ abstract base class _LocalPlatformFile extends PlatformFile {
 
   @override
   Future<int> length() => _file.length();
+
+  @override
+  int lengthSync() => _file.lengthSync();
 
   @override
   Future<Uint8List> readAsBytes() => _file.readAsBytes();
