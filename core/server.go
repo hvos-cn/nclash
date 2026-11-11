@@ -26,9 +26,8 @@ var (
 )
 
 const (
-	maxIPCFrameSize        = 64 * 1024 * 1024
-	ipcWriteTimeout        = 10 * time.Second
-	ipcPartialFrameRetries = 6
+	maxIPCFrameSize = 64 * 1024 * 1024
+	ipcWriteTimeout = 10 * time.Second
 )
 
 var deliveryFailureReported atomic.Bool
@@ -56,6 +55,11 @@ func deliverEvent(data []byte) {
 	send(data)
 }
 
+// The desktop core exits with its host connection, so it is always heard.
+func hasEventListener() bool {
+	return true
+}
+
 func writeFrame(w io.Writer, data []byte) (int, error) {
 	if len(data) > maxIPCFrameSize {
 		return 0, fmt.Errorf("IPC frame exceeds %d bytes", maxIPCFrameSize)
@@ -73,7 +77,6 @@ func writeFrame(w io.Writer, data []byte) (int, error) {
 type resumingWriter struct {
 	conn    ipcConn
 	written int
-	stalls  int
 }
 
 func (writer *resumingWriter) Write(data []byte) (int, error) {
@@ -91,15 +94,22 @@ func (writer *resumingWriter) Write(data []byte) (int, error) {
 	}
 }
 
+// A half-written frame is only in sync while this process keeps writing it,
+// and a host the OS has suspended (Windows Modern Standby freezes the app but
+// not a service's child) drains again whenever it wakes, so a stall is waited
+// out for as long as it lasts. A dead host surfaces as a hard error instead.
 func (writer *resumingWriter) resume(err error) bool {
-	if writer.written == 0 || writer.stalls >= ipcPartialFrameRetries {
+	if writer.written == 0 || !isWriteTimeout(err) {
 		return false
 	}
-	if !errors.Is(err, os.ErrDeadlineExceeded) {
-		return false
-	}
-	writer.stalls++
 	return writer.conn.SetWriteDeadline(time.Now().Add(ipcWriteTimeout)) == nil
+}
+
+// go-winio reports an expired deadline as its own ErrTimeout, which does not
+// match os.ErrDeadlineExceeded; Timeout() is the contract every pipe shares.
+func isWriteTimeout(err error) bool {
+	var timeout interface{ Timeout() bool }
+	return errors.As(err, &timeout) && timeout.Timeout()
 }
 
 func writeAll(w io.Writer, data []byte) (int, error) {
@@ -207,6 +217,6 @@ func serve(dialed ipcConn) {
 			continue
 		}
 
-		go handleMethodCall(call, newMethodResponse(call.ID, nil))
+		dispatchMethodCall(call, newMethodResponse(call.ID, nil))
 	}
 }
