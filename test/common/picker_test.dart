@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:fl_clash/common/picker.dart';
 import 'package:test/test.dart';
 
-base class _LocalPlatformFile extends PlatformFile {
+abstract base class _LocalPlatformFile extends PlatformFile {
   _LocalPlatformFile(this._file);
 
   final File _file;
