@@ -52,8 +52,6 @@ jobs:
           link-to-sdk: true
 
       - name: Fix Go Core Dependencies
-        env:
-          GOSUMDB: off
         working-directory: core
         run: |
           go mod tidy
