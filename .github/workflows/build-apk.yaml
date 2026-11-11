@@ -51,6 +51,11 @@ jobs:
           add-to-path: true
           link-to-sdk: true
 
+      - name: Fix Go Core Dependencies
+        working-directory: core
+        run: |
+          go mod tidy
+
       - name: Install dependencies
         run: flutter pub get
 
